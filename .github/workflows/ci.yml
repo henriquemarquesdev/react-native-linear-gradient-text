@@ -21,6 +21,7 @@ jobs:
         run: yarn lint
 
   test:
+    needs: lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -33,6 +34,7 @@ jobs:
         run: yarn test
 
   build-library:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -48,6 +50,16 @@ jobs:
 
       - name: Login NPM
         run: echo "//registry.npmjs.org/:_authToken=${{secrets.NPM_TOKEN}}" > ~/.npmrc
+
+      - name: Check and Update Version
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          if npm info react-native-linear-gradient-text@${CURRENT_VERSION} > /dev/null 2>&1; then
+            echo "Version ${CURRENT_VERSION} already published. Incrementing version..."
+            yarn version --patch --no-git-tag-version
+          else
+            echo "Version ${CURRENT_VERSION} is available."
+          fi
 
       - name: Release
         run: yarn release
