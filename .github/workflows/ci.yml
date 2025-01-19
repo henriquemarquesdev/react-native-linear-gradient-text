@@ -53,13 +53,16 @@ jobs:
 
       - name: Check and Update Version
         run: |
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
-          if npm info react-native-linear-gradient-text@${CURRENT_VERSION} > /dev/null 2>&1; then
-            echo "Version ${CURRENT_VERSION} already published. Incrementing version..."
-            yarn version --patch --no-git-tag-version
-          else
-            echo "Version ${CURRENT_VERSION} is available."
-          fi
+            CURRENT_VERSION=$(node -p "require('./package.json').version")
+            echo "Current version in package.json: ${CURRENT_VERSION}"
+
+            while npm info react-native-linear-gradient-text@${CURRENT_VERSION} > /dev/null 2>&1; do
+              echo "Version ${CURRENT_VERSION} already exists on NPM. Incrementing version..."
+              yarn version --patch --no-git-tag-version
+              CURRENT_VERSION=$(node -p "require('./package.json').version")
+            done
+
+            echo "Version ${CURRENT_VERSION} is available. Ready for release."
 
       - name: Release
         run: yarn release
